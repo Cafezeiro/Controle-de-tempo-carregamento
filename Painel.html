@@ -3,141 +3,100 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <meta name="theme-color" content="#071028">
-  <meta name="description" content="Painel de visualizacao da fila de veiculos em tempo real">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Painel de Carregamento</title>
-
+  <title>Painel - Tempo de Veículo (Local)</title>
   <style>
-    /* 🔒 ESTILO ORIGINAL – NÃO ALTERADO */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: linear-gradient(135deg, #071028 0%, #0f172a 100%);
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      padding: 20px;
-      min-height: 100vh;
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:linear-gradient(135deg,#071028 0%, #0f172a 100%);
+      color:#fff;
+      font-family:system-ui,-apple-system,Segoe UI,Arial;
+      padding:18px;
+      min-height:100vh;
     }
-
-    #clock {
-      position: fixed;
-      top: 16px;
-      right: 20px;
-      font-size: clamp(16px, 2.5vw, 22px);
-      color: #38bdf8;
-      font-weight: 600;
-      background: rgba(56, 189, 248, 0.15);
-      padding: 8px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
+    #clock{
+      position:fixed; top:14px; right:14px;
+      font-size:18px; color:#38bdf8; font-weight:800;
+      background:rgba(56,189,248,.15);
+      padding:8px 12px; border-radius:12px;
+      border:1px solid rgba(56,189,248,.3);
+      backdrop-filter:blur(8px);
     }
-
-    .header { text-align: center; margin-bottom: 30px; padding: 20px; }
-    .header h1 {
-      color: #38bdf8;
-      font-size: clamp(28px, 6vw, 48px);
-      margin-bottom: 10px;
-      text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    .header{text-align:center; margin:20px 0 16px}
+    .header h1{
+      color:#38bdf8;
+      font-size:clamp(24px, 4vw, 42px);
+      text-shadow:0 0 20px rgba(56,189,248,.35);
+      margin-bottom:10px;
     }
-
-    .header-info {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 15px;
+    .badges{
+      display:flex; justify-content:center; gap:12px; flex-wrap:wrap;
+      margin-top:10px;
     }
-
-    .info-badge {
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-size: clamp(14px, 3vw, 18px);
+    .badge{
+      background:rgba(56,189,248,.1);
+      border:1px solid rgba(56,189,248,.28);
+      padding:10px 16px; border-radius:14px;
+      font-weight:800;
     }
-
-    .nav-link {
-      display: inline-block;
-      margin-top: 15px;
-      padding: 12px 24px;
-      background: rgba(56, 189, 248, 0.2);
-      color: #38bdf8;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: all 0.3s;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+    .links{
+      display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin-top:14px;
     }
-
-    .nav-link:hover {
-      background: rgba(56, 189, 248, 0.3);
-      transform: translateY(-2px);
+    .links a{
+      text-decoration:none;
+      color:#38bdf8;
+      border:1px solid rgba(56,189,248,.3);
+      background:rgba(56,189,248,.12);
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:800;
     }
-
-    .table-container {
-      overflow-x: auto;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    .table-container{
+      overflow-x:auto;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      backdrop-filter:blur(10px);
+      box-shadow:0 8px 32px rgba(0,0,0,.35);
     }
-
-    table { width: 100%; border-collapse: collapse; min-width: 700px; }
-    thead { background: rgba(56, 189, 248, 0.1); position: sticky; top: 0; z-index: 10; }
-
-    th, td {
-      padding: 14px;
-      text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+    table{width:100%; border-collapse:collapse; min-width:760px}
+    thead{background:rgba(56,189,248,.10); position:sticky; top:0; z-index:10}
+    th,td{
+      padding:14px;
+      text-align:center;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      font-size:15px;
     }
-
-    th { color: #38bdf8; font-weight: 600; }
-
-    tbody tr:hover { background: rgba(56, 189, 248, 0.1); }
-
-    .ofr {
-      background: linear-gradient(90deg, rgba(127, 29, 29, 0.3), rgba(185, 28, 28, 0.2));
-      border-left: 4px solid #dc2626;
-      font-weight: bold;
+    th{color:#38bdf8}
+    tbody tr:hover{background:rgba(56,189,248,.08)}
+    .ofr{
+      background:linear-gradient(90deg, rgba(127,29,29,.3), rgba(185,28,28,.2));
+      border-left:4px solid #dc2626;
+      font-weight:900;
     }
-
-    .tempo-alerta { color: #fbbf24; font-weight: bold; }
-    .tempo-critico {
-      color: #dc2626;
-      font-weight: bold;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink { 50% { opacity: 0.5; } }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #64748b;
-      font-size: 20px;
+    .tempo-alerta{color:#fbbf24; font-weight:900}
+    .tempo-critico{color:#dc2626; font-weight:900; animation:blink 1s infinite}
+    @keyframes blink{50%{opacity:.55}}
+    .empty{
+      text-align:center; padding:50px 20px; color:#94a3b8; font-size:18px;
     }
   </style>
 </head>
-
 <body>
 
 <div id="clock"></div>
 
 <div class="header">
-  <h1>🚚 Painel de Carregamento</h1>
-
-  <div class="header-info">
-    <div class="info-badge" id="totalVeiculos">Total: 0</div>
-    <div class="info-badge" id="totalOFR">OFR: 0</div>
-    <div class="info-badge" id="totalNormal">Normal: 0</div>
+  <h1 id="titulo">🚚 Painel</h1>
+  <div class="badges">
+    <div class="badge" id="bTotal">Total: 0</div>
+    <div class="badge" id="bOfr">OFR: 0</div>
+    <div class="badge" id="bNormal">Normal: 0</div>
   </div>
 
-  <a href="Cadastro.html" class="nav-link">Novo Cadastro</a>
-  <a href="index.html" class="nav-link">Início</a>
+  <div class="links">
+    <a href="index.html">Início</a>
+    <a href="Cadastro.html">Cadastro</a>
+  </div>
 </div>
 
 <div class="table-container">
@@ -154,99 +113,105 @@
       </tr>
     </thead>
     <tbody id="tbody">
-      <tr>
-        <td colspan="7" class="empty-state">Carregando...</td>
-      </tr>
+      <tr><td colspan="7" class="empty">Carregando...</td></tr>
     </tbody>
   </table>
 </div>
 
 <script>
-  const API_URL = "/api/fila";
-  const tbody = document.getElementById("tbody");
-  let fila = {};
+const STORAGE_KEY = "FILA_VEICULOS_V1";
+const tbody = document.getElementById("tbody");
 
-  function tempo(iso) {
-    const diff = Date.now() - new Date(iso).getTime();
-    const m = Math.floor(diff / 60000);
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    if (m < 0) return "-";
-    if (h > 0) return h + "h " + min + "min";
-    return m + " min";
-  }
+const params = new URLSearchParams(location.search);
+const AREA = params.get("area") || "Trefila 1";
+document.getElementById("titulo").textContent = "🚚 Painel — " + AREA;
 
-  function getTempoClass(min) {
-    if (min > 300) return "tempo-critico";
-    if (min > 200) return "tempo-alerta";
-    return "";
-  }
+function loadAll(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch{ return []; }
+}
 
-  function atualizarEstatisticas(lista) {
-    const total = lista.length;
-    const ofr = lista.filter(v => v.tipo === "OFR").length;
-    document.getElementById("totalVeiculos").textContent = "Total: " + total;
-    document.getElementById("totalOFR").textContent = "OFR: " + ofr;
-    document.getElementById("totalNormal").textContent = "Normal: " + (total - ofr);
-  }
+function tempo(iso){
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff/60000);
+  if(m < 0) return "-";
+  const h = Math.floor(m/60);
+  const min = m % 60;
+  return h>0 ? `${h}h ${min}min` : `${m} min`;
+}
+function getTempoClass(min){
+  if(min > 300) return "tempo-critico";
+  if(min > 200) return "tempo-alerta";
+  return "";
+}
+function hhmm(iso){
+  try{
+    return new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  }catch{return "-";}
+}
 
-  function render() {
-    const lista = Object.entries(fila)
-      .map(([id, v]) => ({ id, ...v }))
-      .sort((a, b) => {
-        if (a.tipo === "OFR" && b.tipo !== "OFR") return -1;
-        if (a.tipo !== "OFR" && b.tipo === "OFR") return 1;
-        return new Date(a.chegada) - new Date(b.chegada); // FIFO
-      });
+function render(){
+  const all = loadAll();
 
-    if (!lista.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhum veículo cadastrado</td></tr>`;
-      atualizarEstatisticas([]);
-      return;
-    }
-
-    tbody.innerHTML = "";
-    lista.forEach((v, i) => {
-      const areaMin = Math.floor((Date.now() - new Date(v.chegada)) / 60000);
-      const usinaMin = v.entrada
-        ? Math.floor((Date.now() - new Date(v.entrada)) / 60000)
-        : -1;
-
-      tbody.innerHTML += `
-        <tr class="${v.tipo === "OFR" ? "ofr" : ""}">
-          <td>${i + 1}</td>
-          <td>${v.transporte}</td>
-          <td><strong>${v.placa}</strong></td>
-          <td>${new Date(v.chegada).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td>
-          <td class="${getTempoClass(areaMin)}">${tempo(v.chegada)}</td>
-          <td class="${getTempoClass(usinaMin)}">${v.entrada ? tempo(v.entrada) : "-"}</td>
-          <td><strong>${v.tipo}</strong></td>
-        </tr>`;
+  const lista = all
+    .filter(v => v.area === AREA)
+    .sort((a,b)=>{
+      if(a.tipo==="OFR" && b.tipo!=="OFR") return -1;
+      if(a.tipo!=="OFR" && b.tipo==="OFR") return 1;
+      return new Date(a.chegada) - new Date(b.chegada);
     });
 
-    atualizarEstatisticas(lista);
+  const total = lista.length;
+  const ofr = lista.filter(v=>v.tipo==="OFR").length;
+  document.getElementById("bTotal").textContent = "Total: " + total;
+  document.getElementById("bOfr").textContent = "OFR: " + ofr;
+  document.getElementById("bNormal").textContent = "Normal: " + (total - ofr);
+
+  if(!total){
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">Nenhum veículo nesta área</td></tr>`;
+    return;
   }
 
-  async function carregar() {
-    try {
-      const res = await fetch(API_URL);
-      fila = await res.json();
-      render();
-    } catch {
-      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Erro ao carregar dados</td></tr>`;
-    }
-  }
+  tbody.innerHTML = lista.map((v,i)=>{
+    const areaMin = Math.floor((Date.now() - new Date(v.chegada)) / 60000);
+    const usinaMin = v.entrada ? Math.floor((Date.now() - new Date(v.entrada)) / 60000) : -1;
 
-  function atualizarRelogio() {
-    document.getElementById("clock").textContent =
-      new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  }
+    return `
+      <tr class="${v.tipo==="OFR" ? "ofr" : ""}">
+        <td>${i+1}</td>
+        <td>${esc(v.transporte)}</td>
+        <td><b>${esc(v.placa)}</b></td>
+        <td>${hhmm(v.chegada)}</td>
+        <td class="${getTempoClass(areaMin)}">${tempo(v.chegada)}</td>
+        <td class="${getTempoClass(usinaMin)}">${v.entrada ? tempo(v.entrada) : "-"}</td>
+        <td><b>${esc(v.tipo)}</b></td>
+      </tr>
+    `;
+  }).join("");
+}
 
-  carregar();
-  setInterval(carregar, 5000);
-  setInterval(render, 10000);
-  setInterval(atualizarRelogio, 1000);
-  atualizarRelogio();
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+function tickClock(){
+  document.getElementById("clock").textContent =
+    new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+
+render();
+setInterval(render, 5000);
+setInterval(tickClock, 1000);
+tickClock();
+
+// atualiza se algum cadastro acontecer em outro TAB
+window.addEventListener("storage",(e)=>{
+  if(e.key === STORAGE_KEY || e.key === STORAGE_KEY + "_PING"){
+    render();
+  }
+});
 </script>
 
 </body>

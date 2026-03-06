@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+  <title>Painel Geral - Todas as Áreas (Local)</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:linear-gradient(135deg,#071028 0%, #0f172a 100%);
+      color:#fff;
+      font-family:system-ui,-apple-system,Segoe UI,Arial;
+      padding:16px;
+      min-height:100vh;
+    }
+    #clock{
+      position:fixed; top:14px; right:14px;
+      font-size:18px; color:#38bdf8; font-weight:900;
+      background:rgba(56,189,248,.15);
+      padding:8px 12px; border-radius:12px;
+      border:1px solid rgba(56,189,248,.3);
+      backdrop-filter:blur(8px);
+      z-index:999;
+    }
+    header{
+      text-align:center;
+      padding:10px 10px 18px;
+    }
+    header h1{
+      color:#38bdf8;
+      font-size:clamp(22px, 3.6vw, 40px);
+      text-shadow:0 0 18px rgba(56,189,248,.35);
+      margin-bottom:10px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .topbar a{
+      text-decoration:none;
+      color:#38bdf8;
+      border:1px solid rgba(56,189,248,.3);
+      background:rgba(56,189,248,.12);
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:900;
+    }
+
+    .stats{
+      display:flex;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin:12px 0 6px;
+    }
+    .badge{
+      background:rgba(56,189,248,.10);
+      border:1px solid rgba(56,189,248,.28);
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:900;
+      font-size:14px;
+    }
+
+    /* grade de áreas */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(320px, 1fr));
+      gap:14px;
+      margin-top:12px;
+    }
+    @media (min-width: 1200px){
+      .grid{ grid-template-columns:repeat(3, minmax(320px, 1fr)); }
+    }
+    @media (max-width: 760px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    .card{
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+      backdrop-filter:blur(10px);
+    }
+    .card-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 14px;
+      background:rgba(56,189,248,.10);
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .card-title{
+      font-weight:1000;
+      color:#38bdf8;
+      font-size:16px;
+      line-height:1.1;
+    }
+    .card-mini{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      font-weight:900;
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(56,189,248,.28);
+      background:rgba(56,189,248,.08);
+      color:#c7f0ff;
+      white-space:nowrap;
+    }
+    .pill.ofr{
+      border-color:rgba(220,38,38,.45);
+      background:rgba(220,38,38,.12);
+      color:#fecaca;
+    }
+
+    .table-wrap{ overflow-x:auto; }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:560px;
+    }
+    th,td{
+      padding:10px 10px;
+      text-align:center;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      font-size:13px;
+    }
+    th{
+      color:#9ae6ff;
+      font-weight:900;
+      background:rgba(255,255,255,.03);
+      position:sticky;
+      top:0;
+      z-index:5;
+    }
+    tbody tr:hover{ background:rgba(56,189,248,.08); }
+
+    .ofr-row{
+      background:linear-gradient(90deg, rgba(127,29,29,.28), rgba(185,28,28,.18));
+      border-left:4px solid #dc2626;
+      font-weight:900;
+    }
+
+    .tempo-alerta{ color:#fbbf24; font-weight:1000; }
+    .tempo-critico{ color:#dc2626; font-weight:1000; animation:blink 1s infinite; }
+    @keyframes blink{50%{opacity:.55}}
+
+    .empty{
+      text-align:center;
+      padding:18px 12px;
+      color:#94a3b8;
+      font-weight:800;
+      font-size:14px;
+    }
+    footer{
+      margin-top:14px;
+      text-align:center;
+      color:#94a3b8;
+      font-size:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="clock"></div>
+
+  <header>
+    <h1>📺 Painel Geral — Todas as Áreas</h1>
+
+    <div class="stats">
+      <div class="badge" id="gTotal">Total: 0</div>
+      <div class="badge" id="gOfr">OFR: 0</div>
+      <div class="badge" id="gNormal">Normal: 0</div>
+    </div>
+
+    <div class="topbar">
+      <a href="index.html">Início</a>
+      <a href="Cadastro.html">Cadastro</a>
+    </div>
+  </header>
+
+  <main class="grid" id="gridAreas"></main>
+
+  <footer>
+    Modo local/manual: os dados ficam salvos no navegador deste computador (localStorage).
+  </footer>
+
+<script>
+  const STORAGE_KEY = "FILA_VEICULOS_V1";
+
+  const AREAS = [
+    "Trefila 1",
+    "Pepa 1/2",
+    "Trefila 2",
+    "L3",
+    "FAP",
+    "Galpão de lona",
+    "P. Bobinas"
+  ];
+
+  function loadAll(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+    catch{ return []; }
+  }
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function hhmm(iso){
+    try{
+      return new Date(iso).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    }catch{return "-";}
+  }
+
+  function tempo(iso){
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff/60000);
+    if(m < 0) return "-";
+    const h = Math.floor(m/60);
+    const min = m % 60;
+    return h>0 ? `${h}h ${min}min` : `${m} min`;
+  }
+
+  function getTempoClass(min){
+    if(min > 300) return "tempo-critico";
+    if(min > 200) return "tempo-alerta";
+    return "";
+  }
+
+  function buildCard(area, lista){
+    const total = lista.length;
+    const ofr = lista.filter(v=>v.tipo==="OFR").length;
+
+    const rows = total ? lista.map((v,i)=>{
+      const areaMin = Math.floor((Date.now() - new Date(v.chegada)) / 60000);
+      const usinaMin = v.entrada ? Math.floor((Date.now() - new Date(v.entrada)) / 60000) : -1;
+
+      return `
+        <tr class="${v.tipo==="OFR" ? "ofr-row" : ""}">
+          <td>${i+1}</td>
+          <td>${esc(v.transporte)}</td>
+          <td><b>${esc(v.placa)}</b></td>
+          <td>${hhmm(v.chegada)}</td>
+          <td class="${getTempoClass(areaMin)}">${tempo(v.chegada)}</td>
+          <td class="${getTempoClass(usinaMin)}">${v.entrada ? tempo(v.entrada) : "-"}</td>
+          <td><b>${esc(v.tipo)}</b></td>
+        </tr>
+      `;
+    }).join("") : "";
+
+    const body = total ? `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Transp.</th>
+              <th>Placa</th>
+              <th>Cheg.</th>
+              <th>Área</th>
+              <th>Usina</th>
+              <th>Tipo</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    ` : `<div class="empty">Nenhum veículo</div>`;
+
+    return `
+      <section class="card">
+        <div class="card-head">
+          <div class="card-title">${esc(area)}</div>
+          <div class="card-mini">
+            <span class="pill">Total: ${total}</span>
+            <span class="pill ofr">OFR: ${ofr}</span>
+          </div>
+        </div>
+        ${body}
+      </section>
+    `;
+  }
+
+  function render(){
+    const all = loadAll();
+
+    // estatísticas gerais
+    const gTotal = all.length;
+    const gOfr = all.filter(v=>v.tipo==="OFR").length;
+    document.getElementById("gTotal").textContent = "Total: " + gTotal;
+    document.getElementById("gOfr").textContent = "OFR: " + gOfr;
+    document.getElementById("gNormal").textContent = "Normal: " + (gTotal - gOfr);
+
+    const grid = document.getElementById("gridAreas");
+
+    // monta as listas por área, com ordenação (OFR primeiro, depois chegada)
+    const html = AREAS.map(area => {
+      const lista = all
+        .filter(v => v.area === area)
+        .sort((a,b)=>{
+          if(a.tipo==="OFR" && b.tipo!=="OFR") return -1;
+          if(a.tipo!=="OFR" && b.tipo==="OFR") return 1;
+          return new Date(a.chegada) - new Date(b.chegada);
+        });
+
+      return buildCard(area, lista);
+    }).join("");
+
+    grid.innerHTML = html;
+  }
+
+  function tickClock(){
+    document.getElementById("clock").textContent =
+      new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  }
+
+  render();
+  setInterval(render, 5000);
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  // Atualiza automaticamente quando cadastrar/remover em outra aba
+  window.addEventListener("storage",(e)=>{
+    if(e.key === STORAGE_KEY || e.key === STORAGE_KEY + "_PING"){
+      render();
+    }
+  });
+</script>
+</body>
+</html>

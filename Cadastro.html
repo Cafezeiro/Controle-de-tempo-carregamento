@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cadastro de Veículos</title>
+<title>Cadastro de Veículos (Local)</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  font-family:system-ui,-apple-system,Segoe UI,Arial;
   background:linear-gradient(135deg,#667eea,#764ba2);
   min-height:100vh;
   padding:20px;
@@ -17,93 +17,98 @@ body{
 }
 .container{
   width:100%;
-  max-width:700px;
+  max-width:980px;
   background:#fff;
   border-radius:20px;
-  padding:30px;
+  padding:26px;
   box-shadow:0 20px 60px rgba(0,0,0,.3);
 }
-.header{text-align:center;margin-bottom:20px}
+.header{text-align:center;margin-bottom:16px}
+.header h2{font-size:26px}
 .tabs{
-  display:flex;
-  gap:10px;
-  margin-bottom:20px;
+  display:flex; gap:10px; margin:18px 0 20px;
 }
 .tabs button{
-  flex:1;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  font-weight:600;
-  cursor:pointer;
-  background:#e5e7eb;
+  flex:1; padding:12px; border:none; border-radius:12px;
+  font-weight:700; cursor:pointer; background:#e5e7eb;
 }
-.tabs button.active{
-  background:#667eea;
-  color:#fff;
-}
+.tabs button.active{background:#667eea;color:#fff}
 section{display:none}
 section.active{display:block}
-label{display:block;font-weight:600;margin:10px 0 6px}
-input{
+label{display:block;font-weight:700;margin:10px 0 6px}
+input,select{
   width:100%;
   padding:14px;
   border-radius:12px;
   border:2px solid #e2e8f0;
 }
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+@media (max-width:720px){ .row{grid-template-columns:1fr} }
+
 .button-group{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:15px;
-  margin-top:25px;
+  gap:14px;
+  margin-top:18px;
 }
 button{
   padding:14px;
   border-radius:12px;
   border:none;
-  font-weight:600;
+  font-weight:800;
   cursor:pointer;
 }
 .normal{background:#16a34a;color:#fff}
 .ofr{background:#dc2626;color:#fff}
-.remove{
-  background:#dc2626;
-  color:#fff;
-  padding:6px 10px;
-  border-radius:6px;
+.secondary{
+  background:#0f172a; color:#fff;
 }
-
-table{
-  width:100%;
-  border-collapse:collapse;
+.small-actions{
+  display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;
 }
-th,td{
-  padding:10px;
-  border-bottom:1px solid #e5e7eb;
-  text-align:center;
+.small-actions button{
+  padding:10px 12px;
+  border-radius:12px;
+  font-weight:800;
 }
+table{width:100%; border-collapse:collapse; margin-top:10px}
+th,td{padding:10px; border-bottom:1px solid #e5e7eb; text-align:center}
+th{background:#f1f5f9}
+.remove{background:#dc2626;color:#fff;padding:6px 10px;border-radius:8px}
+.move{background:#2563eb;color:#fff;padding:6px 10px;border-radius:8px}
 .toast{
-  position:fixed;
-  bottom:20px;
-  left:50%;
+  position:fixed; bottom:20px; left:50%;
   transform:translateX(-50%) translateY(100px);
-  background:#16a34a;
-  color:#fff;
-  padding:14px 20px;
-  border-radius:10px;
-  opacity:0;
-  transition:.3s;
+  background:#16a34a; color:#fff;
+  padding:14px 18px; border-radius:12px;
+  opacity:0; transition:.25s;
 }
-.toast.show{opacity:1;transform:translateX(-50%)}
+.toast.show{opacity:1; transform:translateX(-50%)}
 .toast.error{background:#dc2626}
+.note{
+  margin-top:16px;
+  font-size:13px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#7c2d12;
+  padding:10px 12px;
+  border-radius:12px;
+}
 </style>
 </head>
 
 <body>
-
 <div class="container">
   <div class="header">
-    <h2>Cadastro de Veículos</h2>
+    <h2>Cadastro de Veículos (Modo Local)</h2>
+    <div style="margin-top:8px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <a href="index.html" style="text-decoration:none;font-weight:800;color:#1d4ed8;">⬅ Voltar ao Início</a>
+      <a href="Painel.html?area=Trefila%201" style="text-decoration:none;font-weight:800;color:#1d4ed8;">Abrir um Painel</a>
+    </div>
   </div>
 
   <div class="tabs">
@@ -111,138 +116,348 @@ th,td{
     <button onclick="openTab(event,'gerenciar')">Gerenciar</button>
   </div>
 
-  <!-- CADASTRO (INALTERADO NA LÓGICA) -->
   <section id="cadastro" class="active">
-    <label>Transporte</label>
-    <input id="transporte" type="number">
+    <div class="row">
+      <div>
+        <label>Área</label>
+        <select id="area">
+          <option value="">Selecione a área</option>
+          <option value="Trefila 1">Trefila 1</option>
+          <option value="Pepa 1/2">Pepa 1/2</option>
+          <option value="Trefila 2">Trefila 2</option>
+          <option value="L3">L3</option>
+          <option value="FAP">FAP</option>
+          <option value="Galpão de lona">Galpão de lona</option>
+          <option value="P. Bobinas">P. Bobinas</option>
+        </select>
+      </div>
+      <div>
+        <label>Transporte</label>
+        <input id="transporte" type="number" placeholder="Ex: 12345">
+      </div>
+    </div>
 
-    <label>Placa</label>
-    <input id="placa" style="text-transform:uppercase">
+    <div class="row">
+      <div>
+        <label>Placa</label>
+        <input id="placa" style="text-transform:uppercase" placeholder="ABC1D23">
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="tipo">
+          <option value="Normal">Normal</option>
+          <option value="OFR">OFR</option>
+        </select>
+      </div>
+    </div>
 
-    <label>Entrada Usina</label>
-    <input id="entrada" type="datetime-local">
-
-    <label>Chegada Área</label>
-    <input id="chegada" type="datetime-local">
+    <div class="row">
+      <div>
+        <label>Entrada Usina</label>
+        <input id="entrada" type="datetime-local">
+      </div>
+      <div>
+        <label>Chegada Área</label>
+        <input id="chegada" type="datetime-local">
+      </div>
+    </div>
 
     <div class="button-group">
-      <button class="normal" onclick="adicionar(false)">Adicionar Normal</button>
-      <button class="ofr" onclick="adicionar(true)">Adicionar OFR</button>
+      <button class="normal" onclick="salvar('Normal')">Adicionar Normal</button>
+      <button class="ofr" onclick="salvar('OFR')">Adicionar OFR</button>
+    </div>
+
+    <div class="small-actions">
+      <button class="secondary" onclick="abrirPainelDaArea()">📺 Abrir Painel desta Área</button>
+      <button class="secondary" onclick="abrirPainelGeral()">📋 Painel Geral</button>
+      <button class="secondary" onclick="limparCampos()">🧹 Limpar Campos</button>
+    </div>
+
+    <div class="note">
+      Dica: deixe este cadastro aberto no PC do controle e os painéis em outra aba/monitor (atualizam sozinhos).
     </div>
   </section>
 
-  <!-- GERENCIAR -->
   <section id="gerenciar">
+    <div class="row">
+      <div>
+        <label>Filtrar por área</label>
+        <select id="filtroArea" onchange="renderGerenciar()">
+          <option value="">Todas</option>
+          <option value="Trefila 1">Trefila 1</option>
+          <option value="Pepa 1/2">Pepa 1/2</option>
+          <option value="Trefila 2">Trefila 2</option>
+          <option value="L3">L3</option>
+          <option value="FAP">FAP</option>
+          <option value="Galpão de lona">Galpão de lona</option>
+          <option value="P. Bobinas">P. Bobinas</option>
+        </select>
+      </div>
+      <div>
+        <label>Ações</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="secondary" onclick="exportarJSON()">⬇ Exportar JSON</button>
+          <button class="secondary" onclick="importarJSON()">⬆ Importar JSON</button>
+          <button class="ofr" onclick="limparTudo()">🗑 Limpar Tudo</button>
+        </div>
+      </div>
+    </div>
 
     <table>
       <thead>
         <tr>
+          <th>Área</th>
           <th>Transporte</th>
           <th>Placa</th>
           <th>Chegada</th>
           <th>Entrada</th>
           <th>Tipo</th>
-          <th>Ação</th>
+          <th>Ações</th>
         </tr>
       </thead>
-      <tbody id="tbodyGerenciar"></tbody>
+      <tbody id="tbody"></tbody>
     </table>
+
+    <div class="note">
+      “Mover” é útil quando o veículo troca de frente. “Remover” retira do painel.
+    </div>
   </section>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
-const API_URL="/api/fila";
-let fila={};
+/** ====== CONFIG / STORAGE ====== **/
+const STORAGE_KEY = "FILA_VEICULOS_V1";
 
-function showToast(msg,err=false){
-  const t=document.getElementById("toast");
-  t.textContent=msg;
-  t.className="toast show"+(err?" error":"");
-  setTimeout(()=>t.className="toast",3000);
+function loadAll(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch{ return []; }
+}
+function saveAll(arr){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  // avisa outros tabs/painéis
+  localStorage.setItem(STORAGE_KEY + "_PING", String(Date.now()));
+}
+function uid(){
+  return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
 }
 
+/** ====== UI ====== **/
+const areaEl = document.getElementById("area");
+const transporteEl = document.getElementById("transporte");
+const placaEl = document.getElementById("placa");
+const tipoEl = document.getElementById("tipo");
+const entradaEl = document.getElementById("entrada");
+const chegadaEl = document.getElementById("chegada");
+const toastEl = document.getElementById("toast");
+
+function showToast(msg, err=false){
+  toastEl.textContent = msg;
+  toastEl.className = "toast show" + (err ? " error" : "");
+  setTimeout(()=> toastEl.className = "toast", 2800);
+}
 function openTab(e,id){
   document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
   e.target.classList.add("active");
-  if(id==="gerenciar") carregar();
+  if(id==="gerenciar") renderGerenciar();
 }
 
-async function adicionar(ofr){
-  const transporte=transporteInput.value;
-  const placa=placaInput.value;
-  const entrada=entradaInput.value;
-  const chegada=chegadaInput.value;
+function limparCampos(){
+  transporteEl.value="";
+  placaEl.value="";
+  // não limpa a área por padrão (pra agilizar)
+  showToast("Campos limpos.");
+}
 
-  if(!transporte||!placa||!entrada||!chegada){
-    showToast("Preencha todos os campos",true);
+function abrirPainelDaArea(){
+  const area = areaEl.value;
+  if(!area){ showToast("Selecione a área primeiro.", true); return; }
+  window.open("Painel.html?area=" + encodeURIComponent(area), "_blank");
+}
+function abrirPainelGeral(){
+  window.location.href = "Painel_geral.html";
+}
+
+/** ====== CADASTRO ====== **/
+function salvar(tipoForcado){
+  const area = areaEl.value;
+  const transporte = (transporteEl.value || "").trim();
+  const placa = (placaEl.value || "").trim().toUpperCase();
+  const entrada = entradaEl.value;
+  const chegada = chegadaEl.value;
+  const tipo = tipoForcado || tipoEl.value;
+
+  if(!area || !transporte || !placa || !entrada || !chegada){
+    showToast("Preencha todos os campos.", true);
     return;
   }
 
-  const res=await fetch(API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      transporte,
-      placa:placa.toUpperCase(),
-      entrada,
-      chegada,
-      tipo:ofr?"OFR":"Normal"
-    })
+  const all = loadAll();
+  all.push({
+    id: uid(),
+    area,
+    transporte,
+    placa,
+    entrada,
+    chegada,
+    tipo,
+    createdAt: Date.now()
   });
+  saveAll(all);
 
-  if(!res.ok){
-    showToast("Erro ao enviar dados",true);
+  showToast("Cadastrado com sucesso!");
+  transporteEl.value="";
+  placaEl.value="";
+}
+
+/** ====== GERENCIAR ====== **/
+function renderGerenciar(){
+  const filtro = document.getElementById("filtroArea").value;
+  const tbody = document.getElementById("tbody");
+  const all = loadAll();
+
+  const lista = all
+    .filter(v => !filtro || v.area === filtro)
+    .sort((a,b)=>{
+      // OFR primeiro
+      if(a.tipo==="OFR" && b.tipo!=="OFR") return -1;
+      if(a.tipo!=="OFR" && b.tipo==="OFR") return 1;
+      return new Date(a.chegada) - new Date(b.chegada);
+    });
+
+  if(!lista.length){
+    tbody.innerHTML = `<tr><td colspan="7">Nenhum registro</td></tr>`;
     return;
   }
 
-  showToast("Veículo cadastrado com sucesso!");
-  transporteInput.value=placaInput.value="";
+  tbody.innerHTML = lista.map(v => `
+    <tr>
+      <td>${esc(v.area)}</td>
+      <td>${esc(v.transporte)}</td>
+      <td><b>${esc(v.placa)}</b></td>
+      <td>${fmtDT(v.chegada)}</td>
+      <td>${fmtDT(v.entrada)}</td>
+      <td>${esc(v.tipo)}</td>
+      <td style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+        <button class="move" onclick="mover('${v.id}')">Mover</button>
+        <button class="remove" onclick="remover('${v.id}')">Remover</button>
+      </td>
+    </tr>
+  `).join("");
 }
 
-async function carregar(){
-  const res=await fetch(API_URL);
-  fila=await res.json();
-  const tbody=document.getElementById("tbodyGerenciar");
-  tbody.innerHTML="";
-  Object.entries(fila).forEach(([id,v])=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td>${v.transporte}</td>
-        <td>${v.placa}</td>
-        <td>${new Date(v.chegada).toLocaleString()}</td>
-        <td>${new Date(v.entrada).toLocaleString()}</td>
-        <td>${v.tipo}</td>
-        <td><button class="remove" onclick="remover('${id}')">Remover</button></td>
-      </tr>`;
-  });
+function remover(id){
+  const all = loadAll();
+  const idx = all.findIndex(v => v.id === id);
+  if(idx < 0) return;
+  if(!confirm("Retirar este veículo da lista?")) return;
+  all.splice(idx,1);
+  saveAll(all);
+  renderGerenciar();
+  showToast("Removido.");
 }
 
-async function remover(id){
-  if(!confirm("Retirar veículo da área?")) return;
-  await fetch(API_URL+"/"+id,{method:"DELETE"});
-  carregar();
+function mover(id){
+  const all = loadAll();
+  const v = all.find(x => x.id === id);
+  if(!v) return;
+
+  const nova = prompt(
+    "Mover para qual área?\n" +
+    "1) Trefila 1\n2) Pepa 1/2\n3) Trefila 2\n4) L3\n5) FAP\n6) Galpão de lona\n7) P. Bobinas\n\n" +
+    "Digite exatamente o nome da área:"
+  );
+
+  if(!nova) return;
+
+  const areas = ["Trefila 1","Pepa 1/2","Trefila 2","L3","FAP","Galpão de lona","P. Bobinas"];
+  if(!areas.includes(nova)){
+    showToast("Área inválida. Digite exatamente como na lista.", true);
+    return;
+  }
+
+  v.area = nova;
+  saveAll(all);
+  renderGerenciar();
+  showToast("Movido para " + nova);
 }
 
+/** ====== IMPORT/EXPORT ====== **/
+function exportarJSON(){
+  const data = localStorage.getItem(STORAGE_KEY) || "[]";
+  const blob = new Blob([data], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "fila_backup.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
-/* atalhos */
-const transporteInput=document.getElementById("transporte");
-const placaInput=document.getElementById("placa");
-const entradaInput=document.getElementById("entrada");
-const chegadaInput=document.getElementById("chegada");
+function importarJSON(){
+  const input = document.createElement("input");
+  input.type="file";
+  input.accept="application/json";
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if(!file) return;
+    const text = await file.text();
+    try{
+      const arr = JSON.parse(text);
+      if(!Array.isArray(arr)) throw new Error("Formato inválido");
+      // valida mínimo
+      for(const v of arr){
+        if(!v.id || !v.area || !v.placa) throw new Error("Itens faltando campos");
+      }
+      saveAll(arr);
+      renderGerenciar();
+      showToast("Importado com sucesso!");
+    }catch(e){
+      showToast("Erro ao importar: " + e.message, true);
+    }
+  };
+  input.click();
+}
 
-/* data/hora padrão */
+function limparTudo(){
+  if(!confirm("ATENÇÃO: isso apaga todos os registros deste computador. Continuar?")) return;
+  saveAll([]);
+  renderGerenciar();
+  showToast("Tudo limpo.");
+}
+
+/** ====== HELPERS ====== **/
+function fmtDT(v){
+  try{
+    if(!v) return "-";
+    return new Date(v).toLocaleString("pt-BR");
+  }catch{return "-";}
+}
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+/** ====== DEFAULT DATETIME ====== **/
 window.addEventListener("DOMContentLoaded",()=>{
-  const n=new Date();
-  n.setMinutes(n.getMinutes()-n.getTimezoneOffset());
-  const v=n.toISOString().slice(0,16);
-  entradaInput.value=chegadaInput.value=v;
+  const n = new Date();
+  n.setMinutes(n.getMinutes() - n.getTimezoneOffset());
+  const v = n.toISOString().slice(0,16);
+  entradaEl.value = v;
+  chegadaEl.value = v;
+});
+
+// atualiza a aba "Gerenciar" se alguém cadastrar em outro tab
+window.addEventListener("storage",(e)=>{
+  if(e.key === STORAGE_KEY + "_PING"){
+    const gerenciarAtivo = document.getElementById("gerenciar").classList.contains("active");
+    if(gerenciarAtivo) renderGerenciar();
+  }
 });
 </script>
-
 </body>
 </html>
 
