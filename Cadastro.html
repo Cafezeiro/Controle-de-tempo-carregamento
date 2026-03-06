@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cadastro de Veículos (Local)</title>
+<title>Cadastro de Veículos (Online)</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -104,7 +104,7 @@ th{background:#f1f5f9}
 <body>
 <div class="container">
   <div class="header">
-    <h2>Cadastro de Veículos (Modo Local)</h2>
+    <h2>Cadastro de Veículos (Online)</h2>
     <div style="margin-top:8px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
       <a href="index.html" style="text-decoration:none;font-weight:800;color:#1d4ed8;">⬅ Voltar ao Início</a>
       <a href="Painel.html?area=Trefila%201" style="text-decoration:none;font-weight:800;color:#1d4ed8;">Abrir um Painel</a>
@@ -227,22 +227,49 @@ th{background:#f1f5f9}
 <div id="toast" class="toast"></div>
 
 <script>
-/** ====== CONFIG / STORAGE ====== **/
-const STORAGE_KEY = "FILA_VEICULOS_V1";
+/** ====== CONFIG / API ====== **/
+const API_URL = "/api/fila";
 
-function loadAll(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-  catch{ return []; }
+async function apiRequest(path = "", options = {}) {
+  const res = await fetch(API_URL + path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (!res.ok) {
+    const msg = data && data.error ? data.error : "Erro ao comunicar com o servidor.";
+    throw new Error(msg);
+  }
+  return data;
 }
-function saveAll(arr){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-  // avisa outros tabs/painéis
-  localStorage.setItem(STORAGE_KEY + "_PING", String(Date.now()));
+
+async function loadAll(){
+  const data = await apiRequest("");
+  return Array.isArray(data) ? data : [];
+}
+async function addItem(payload){
+  return apiRequest("", { method: "POST", body: JSON.stringify(payload) });
+}
+async function updateItem(id, payload){
+  return apiRequest("/" + encodeURIComponent(id), { method: "PUT", body: JSON.stringify(payload) });
+}
+async function deleteItem(id){
+  return apiRequest("/" + encodeURIComponent(id), { method: "DELETE" });
+}
+async function replaceAll(list){
+  return apiRequest("", { method: "PUT", body: JSON.stringify(list) });
+}
+async function clearAll(){
+  return apiRequest("", { method: "DELETE" });
 }
 function uid(){
   return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
 }
-
 /** ====== UI ====== **/
 const areaEl = document.getElementById("area");
 const transporteEl = document.getElementById("transporte");
@@ -282,7 +309,7 @@ function abrirPainelGeral(){
 }
 
 /** ====== CADASTRO ====== **/
-function salvar(tipoForcado){
+async function salvar(tipoForcado){
   const area = areaEl.value;
   const transporte = (transporteEl.value || "").trim();
   const placa = (placaEl.value || "").trim().toUpperCase();
@@ -295,29 +322,29 @@ function salvar(tipoForcado){
     return;
   }
 
-  const all = loadAll();
-  all.push({
-    id: uid(),
-    area,
-    transporte,
-    placa,
-    entrada,
-    chegada,
-    tipo,
-    createdAt: Date.now()
-  });
-  saveAll(all);
-
-  showToast("Cadastrado com sucesso!");
-  transporteEl.value="";
-  placaEl.value="";
+  try{
+    await addItem({ area, transporte, placa, entrada, chegada, tipo });
+    showToast("Cadastrado com sucesso!");
+    transporteEl.value="";
+    placaEl.value="";
+  }catch(e){
+    showToast("Erro ao salvar: " + e.message, true);
+  }
 }
 
 /** ====== GERENCIAR ====== **/
-function renderGerenciar(){
+async function renderGerenciar(){
   const filtro = document.getElementById("filtroArea").value;
   const tbody = document.getElementById("tbody");
-  const all = loadAll();
+
+  let all = [];
+  try{
+    all = await loadAll();
+  }catch(e){
+    tbody.innerHTML = `<tr><td colspan="7">Erro ao carregar</td></tr>`;
+    showToast("Erro ao carregar: " + e.message, true);
+    return;
+  }
 
   const lista = all
     .filter(v => !filtro || v.area === filtro)
@@ -348,23 +375,18 @@ function renderGerenciar(){
     </tr>
   `).join("");
 }
-
-function remover(id){
-  const all = loadAll();
-  const idx = all.findIndex(v => v.id === id);
-  if(idx < 0) return;
+async function remover(id){
   if(!confirm("Retirar este veículo da lista?")) return;
-  all.splice(idx,1);
-  saveAll(all);
-  renderGerenciar();
-  showToast("Removido.");
+  try{
+    await deleteItem(id);
+    renderGerenciar();
+    showToast("Removido.");
+  }catch(e){
+    showToast("Erro ao remover: " + e.message, true);
+  }
 }
 
-function mover(id){
-  const all = loadAll();
-  const v = all.find(x => x.id === id);
-  if(!v) return;
-
+async function mover(id){
   const nova = prompt(
     "Mover para qual área?\n" +
     "1) Trefila 1\n2) Pepa 1/2\n3) Trefila 2\n4) L3\n5) FAP\n6) Galpão de lona\n7) P. Bobinas\n\n" +
@@ -379,21 +401,29 @@ function mover(id){
     return;
   }
 
-  v.area = nova;
-  saveAll(all);
-  renderGerenciar();
-  showToast("Movido para " + nova);
+  try{
+    await updateItem(id, { area: nova });
+    renderGerenciar();
+    showToast("Movido para " + nova);
+  }catch(e){
+    showToast("Erro ao mover: " + e.message, true);
+  }
 }
 
 /** ====== IMPORT/EXPORT ====== **/
-function exportarJSON(){
-  const data = localStorage.getItem(STORAGE_KEY) || "[]";
-  const blob = new Blob([data], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "fila_backup.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
+async function exportarJSON(){
+  try{
+    const all = await loadAll();
+    const data = JSON.stringify(all);
+    const blob = new Blob([data], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "fila_backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }catch(e){
+    showToast("Erro ao exportar: " + e.message, true);
+  }
 }
 
 function importarJSON(){
@@ -407,11 +437,25 @@ function importarJSON(){
     try{
       const arr = JSON.parse(text);
       if(!Array.isArray(arr)) throw new Error("Formato inválido");
-      // valida mínimo
-      for(const v of arr){
-        if(!v.id || !v.area || !v.placa) throw new Error("Itens faltando campos");
+
+      const normalized = arr.map(v => ({
+        id: v.id || uid(),
+        area: v.area,
+        transporte: v.transporte,
+        placa: v.placa,
+        entrada: v.entrada,
+        chegada: v.chegada,
+        tipo: v.tipo,
+        createdAt: v.createdAt || Date.now()
+      }));
+
+      for(const v of normalized){
+        if(!v.area || !v.transporte || !v.placa || !v.entrada || !v.chegada || !v.tipo){
+          throw new Error("Itens faltando campos");
+        }
       }
-      saveAll(arr);
+
+      await replaceAll(normalized);
       renderGerenciar();
       showToast("Importado com sucesso!");
     }catch(e){
@@ -421,11 +465,15 @@ function importarJSON(){
   input.click();
 }
 
-function limparTudo(){
-  if(!confirm("ATENÇÃO: isso apaga todos os registros deste computador. Continuar?")) return;
-  saveAll([]);
-  renderGerenciar();
-  showToast("Tudo limpo.");
+async function limparTudo(){
+  if(!confirm("ATENÇÃO: isso apaga todos os registros do sistema. Continuar?")) return;
+  try{
+    await clearAll();
+    renderGerenciar();
+    showToast("Tudo limpo.");
+  }catch(e){
+    showToast("Erro ao limpar: " + e.message, true);
+  }
 }
 
 /** ====== HELPERS ====== **/
@@ -450,14 +498,13 @@ window.addEventListener("DOMContentLoaded",()=>{
   chegadaEl.value = v;
 });
 
-// atualiza a aba "Gerenciar" se alguém cadastrar em outro tab
-window.addEventListener("storage",(e)=>{
-  if(e.key === STORAGE_KEY + "_PING"){
-    const gerenciarAtivo = document.getElementById("gerenciar").classList.contains("active");
-    if(gerenciarAtivo) renderGerenciar();
-  }
-});
+setInterval(() => {
+  const gerenciarAtivo = document.getElementById("gerenciar").classList.contains("active");
+  if(gerenciarAtivo) renderGerenciar();
+}, 5000);
 </script>
 </body>
 </html>
+
+
 

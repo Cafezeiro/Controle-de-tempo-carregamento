@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
-  <title>Painel Geral - Todas as Áreas (Local)</title>
+  <title>Painel Geral - Todas as Áreas (Online)</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -193,11 +193,11 @@
   <main class="grid" id="gridAreas"></main>
 
   <footer>
-    Modo local/manual: os dados ficam salvos no navegador deste computador (localStorage).
+    Atualização online: os dados são compartilhados entre todos os dispositivos.
   </footer>
 
 <script>
-  const STORAGE_KEY = "FILA_VEICULOS_V1";
+  const API_URL = "/api/fila";
 
   const AREAS = [
     "Trefila 1",
@@ -209,10 +209,18 @@
     "P. Bobinas"
   ];
 
-  function loadAll(){
-    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-    catch{ return []; }
+  async function loadAll(){
+    const res = await fetch(API_URL);
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+    if(!res.ok){
+      const msg = data && data.error ? data.error : "Erro ao carregar.";
+      throw new Error(msg);
+    }
+    return Array.isArray(data) ? data : [];
   }
+
 
   function esc(s){
     return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -295,8 +303,15 @@
     `;
   }
 
-  function render(){
-    const all = loadAll();
+  async function render(){
+    let all = [];
+    try{
+      all = await loadAll();
+    }catch(e){
+      const grid = document.getElementById("gridAreas");
+      grid.innerHTML = `<div class="empty">Erro ao carregar</div>`;
+      return;
+    }
 
     // estatísticas gerais
     const gTotal = all.length;
@@ -323,6 +338,7 @@
     grid.innerHTML = html;
   }
 
+
   function tickClock(){
     document.getElementById("clock").textContent =
       new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
@@ -333,12 +349,8 @@
   setInterval(tickClock, 1000);
   tickClock();
 
-  // Atualiza automaticamente quando cadastrar/remover em outra aba
-  window.addEventListener("storage",(e)=>{
-    if(e.key === STORAGE_KEY || e.key === STORAGE_KEY + "_PING"){
-      render();
-    }
-  });
+  
 </script>
 </body>
 </html>
+

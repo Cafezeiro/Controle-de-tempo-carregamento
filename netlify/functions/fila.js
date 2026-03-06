@@ -1,7 +1,7 @@
-// Persistencia usando Netlify Blobs, com fallback em memoria quando o ambiente nao estiver configurado.
+﻿// Persistencia usando Netlify Blobs, com fallback em memoria quando o ambiente nao estiver configurado.
 const { getStore } = require("@netlify/blobs");
 
-let memoryStore = {}; // fallback em memoria (nao persiste entre invocacoes)
+let memoryStore = []; // fallback em memoria (nao persiste entre invocacoes)
 
 function createStore() {
   const siteID = process.env.SITE_ID || process.env.BLOBS_SITE_ID;
@@ -26,17 +26,28 @@ function createStore() {
 
 const store = createStore();
 
-async function loadFila() {
+async function loadRaw() {
   if (store) {
     const text = await store.get("fila.json", { type: "text" });
-    if (!text) return {};
+    if (!text) return [];
     try {
       return JSON.parse(text);
     } catch {
-      return {};
+      return [];
     }
   }
   return memoryStore;
+}
+
+function normalize(data) {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== "object") return [];
+  return Object.entries(data).map(([id, v]) => ({ id, ...v }));
+}
+
+async function loadFila() {
+  const data = await loadRaw();
+  return normalize(data);
 }
 
 async function saveFila(data) {
@@ -49,11 +60,17 @@ async function saveFila(data) {
   }
 }
 
+function getIdFromPath(path) {
+  if (!path) return null;
+  const match = path.match(/\/fila\/([^/]+)$/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 exports.handler = async (event) => {
   // CORS permissive para demo; ajuste Origin se quiser restringir
   const headers = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Content-Type": "application/json",
   };
@@ -62,12 +79,15 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers };
   }
 
-  if (event.httpMethod === "GET") {
+  const method = event.httpMethod || "GET";
+  const id = getIdFromPath(event.path || "");
+
+  if (method === "GET") {
     const fila = await loadFila();
     return { statusCode: 200, headers, body: JSON.stringify(fila) };
   }
 
-  if (event.httpMethod === "POST") {
+  if (method === "POST") {
     let body;
     try {
       body = JSON.parse(event.body || "{}");
@@ -75,38 +95,70 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid JSON" }) };
     }
 
-    const { transporte, placa, entrada, chegada, tipo } = body;
-    if (!transporte || !placa || !entrada || !chegada || !tipo) {
+    const { area, transporte, placa, entrada, chegada, tipo } = body;
+    if (!area || !transporte || !placa || !entrada || !chegada || !tipo) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "Campos obrigatorios faltando" }) };
     }
 
     const fila = await loadFila();
-    const id = Date.now().toString();
-    fila[id] = {
+    const newId = Date.now().toString() + "_" + Math.random().toString(16).slice(2);
+    const item = {
+      id: newId,
+      area,
       transporte,
       placa,
       entrada,
       chegada,
       tipo,
-      timestamp: Date.now(),
+      createdAt: Date.now(),
     };
+    fila.push(item);
     await saveFila(fila);
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, id }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, item }) };
   }
 
-  if (event.httpMethod === "DELETE") {
-    const id = (event.path || "").split("/").pop(); // id vem no final da rota /fila/:id
-    if (!id) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "ID obrigatorio" }) };
+  if (method === "PUT") {
+    let body;
+    try {
+      body = JSON.parse(event.body || "{}");
+    } catch (err) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid JSON" }) };
     }
 
     const fila = await loadFila();
-    if (!fila[id]) {
-      return { statusCode: 404, headers, body: JSON.stringify({ error: "Registro nao encontrado" }) };
+
+    if (id) {
+      const idx = fila.findIndex((v) => v.id === id);
+      if (idx < 0) {
+        return { statusCode: 404, headers, body: JSON.stringify({ error: "Registro nao encontrado" }) };
+      }
+      const current = fila[idx];
+      fila[idx] = { ...current, ...body, id: current.id };
+      await saveFila(fila);
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, item: fila[idx] }) };
     }
 
-    delete fila[id];
-    await saveFila(fila);
+    if (!Array.isArray(body)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: "Array esperado" }) };
+    }
+
+    await saveFila(body);
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+  }
+
+  if (method === "DELETE") {
+    if (id) {
+      const fila = await loadFila();
+      const idx = fila.findIndex((v) => v.id === id);
+      if (idx < 0) {
+        return { statusCode: 404, headers, body: JSON.stringify({ error: "Registro nao encontrado" }) };
+      }
+      fila.splice(idx, 1);
+      await saveFila(fila);
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+    }
+
+    await saveFila([]);
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
   }
 

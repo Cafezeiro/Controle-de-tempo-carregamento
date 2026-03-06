@@ -1,9 +1,9 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-  <title>Painel - Tempo de Veículo (Local)</title>
+  <title>Painel - Tempo de Veículo (Online)</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -119,17 +119,25 @@
 </div>
 
 <script>
-const STORAGE_KEY = "FILA_VEICULOS_V1";
+const API_URL = "/api/fila";
 const tbody = document.getElementById("tbody");
 
 const params = new URLSearchParams(location.search);
 const AREA = params.get("area") || "Trefila 1";
 document.getElementById("titulo").textContent = "🚚 Painel — " + AREA;
 
-function loadAll(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-  catch{ return []; }
+async function loadAll(){
+  const res = await fetch(API_URL);
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if(!res.ok){
+    const msg = data && data.error ? data.error : "Erro ao carregar.";
+    throw new Error(msg);
+  }
+  return Array.isArray(data) ? data : [];
 }
+
 
 function tempo(iso){
   const diff = Date.now() - new Date(iso).getTime();
@@ -150,8 +158,14 @@ function hhmm(iso){
   }catch{return "-";}
 }
 
-function render(){
-  const all = loadAll();
+async function render(){
+  let all = [];
+  try{
+    all = await loadAll();
+  }catch(e){
+    tbody.innerHTML = `<tr><td colspan="7" class="empty">Erro ao carregar</td></tr>`;
+    return;
+  }
 
   const lista = all
     .filter(v => v.area === AREA)
@@ -190,6 +204,7 @@ function render(){
   }).join("");
 }
 
+
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -206,12 +221,7 @@ setInterval(render, 5000);
 setInterval(tickClock, 1000);
 tickClock();
 
-// atualiza se algum cadastro acontecer em outro TAB
-window.addEventListener("storage",(e)=>{
-  if(e.key === STORAGE_KEY || e.key === STORAGE_KEY + "_PING"){
-    render();
-  }
-});
+
 </script>
 
 </body>
