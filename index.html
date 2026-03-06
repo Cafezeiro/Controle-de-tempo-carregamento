@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <meta name="theme-color" content="#667eea">
+  <meta name="description" content="Sistema de cadastro e controle de veiculos em tempo real">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Sistema de Controle de Veiculos</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      text-align: center;
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #1e293b;
+      font-size: clamp(28px, 5vw, 42px);
+      margin-bottom: 15px;
+    }
+
+    p {
+      color: #64748b;
+      font-size: clamp(16px, 3vw, 20px);
+      margin-bottom: 40px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 16px;
+      padding: 40px 30px;
+      text-decoration: none;
+      color: white;
+      transition: all 0.3s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+
+    .card:active {
+      transform: translateY(-4px);
+    }
+
+    .card.cadastro {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+
+    .card.painel {
+      background: linear-gradient(135deg, #071028 0%, #0f172a 100%);
+    }
+
+    .card-icon {
+      font-size: 64px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: clamp(20px, 4vw, 28px);
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .card-description {
+      font-size: clamp(14px, 2.5vw, 16px);
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 1920px) {
+      .container {
+        max-width: 1000px;
+        padding: 60px;
+      }
+
+      .card {
+        padding: 60px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sistema de Controle de Veiculos</h1>
+    <p>Gerencie o cadastro e a visualizacao de veiculos em tempo real</p>
+    
+    <div class="button-grid">
+      <a href="Cadastro.html" class="card cadastro">
+        <div class="card-icon">C</div>
+        <h2 class="card-title">Cadastro</h2>
+        <p class="card-description">Cadastre novos veiculos na fila</p>
+      </a>
+      
+      <a href="Painel.html" class="card painel">
+        <div class="card-icon">P</div>
+        <h2 class="card-title">Painel</h2>
+        <p class="card-description">Visualize a fila em tempo real</p>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
