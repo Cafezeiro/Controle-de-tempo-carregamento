@@ -1,6 +1,7 @@
 ﻿// Persistencia usando Netlify Blobs, com fallback em memoria quando o ambiente nao estiver configurado.
 const { getStore } = require("@netlify/blobs");
 
+const allowMemoryFallback = process.env.ALLOW_MEMORY_FALLBACK === "true";
 let memoryStore = []; // fallback em memoria (nao persiste entre invocacoes)
 
 function createStore() {
@@ -36,6 +37,11 @@ async function loadRaw() {
       return [];
     }
   }
+  if (!allowMemoryFallback) {
+    const err = new Error("Armazenamento nao configurado");
+    err.code = "STORAGE_NOT_CONFIGURED";
+    throw err;
+  }
   return memoryStore;
 }
 
@@ -56,6 +62,11 @@ async function saveFila(data) {
       metadata: { contentType: "application/json" },
     });
   } else {
+    if (!allowMemoryFallback) {
+      const err = new Error("Armazenamento nao configurado");
+      err.code = "STORAGE_NOT_CONFIGURED";
+      throw err;
+    }
     memoryStore = data;
   }
 }
@@ -75,92 +86,106 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers };
-  }
+  const fail = (statusCode, message) => ({
+    statusCode,
+    headers,
+    body: JSON.stringify({ error: message }),
+  });
 
-  const method = event.httpMethod || "GET";
-  const id = getIdFromPath(event.path || "");
-
-  if (method === "GET") {
-    const fila = await loadFila();
-    return { statusCode: 200, headers, body: JSON.stringify(fila) };
-  }
-
-  if (method === "POST") {
-    let body;
-    try {
-      body = JSON.parse(event.body || "{}");
-    } catch (err) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid JSON" }) };
+  try {
+    if (event.httpMethod === "OPTIONS") {
+      return { statusCode: 200, headers };
     }
 
-    const { area, transporte, placa, entrada, chegada, tipo } = body;
-    if (!area || !transporte || !placa || !entrada || !chegada || !tipo) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "Campos obrigatorios faltando" }) };
-    }
+    const method = event.httpMethod || "GET";
+    const id = getIdFromPath(event.path || "");
 
-    const fila = await loadFila();
-    const newId = Date.now().toString() + "_" + Math.random().toString(16).slice(2);
-    const item = {
-      id: newId,
-      area,
-      transporte,
-      placa,
-      entrada,
-      chegada,
-      tipo,
-      createdAt: Date.now(),
-    };
-    fila.push(item);
-    await saveFila(fila);
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, item }) };
-  }
-
-  if (method === "PUT") {
-    let body;
-    try {
-      body = JSON.parse(event.body || "{}");
-    } catch (err) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid JSON" }) };
-    }
-
-    const fila = await loadFila();
-
-    if (id) {
-      const idx = fila.findIndex((v) => v.id === id);
-      if (idx < 0) {
-        return { statusCode: 404, headers, body: JSON.stringify({ error: "Registro nao encontrado" }) };
-      }
-      const current = fila[idx];
-      fila[idx] = { ...current, ...body, id: current.id };
-      await saveFila(fila);
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, item: fila[idx] }) };
-    }
-
-    if (!Array.isArray(body)) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "Array esperado" }) };
-    }
-
-    await saveFila(body);
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
-  }
-
-  if (method === "DELETE") {
-    if (id) {
+    if (method === "GET") {
       const fila = await loadFila();
-      const idx = fila.findIndex((v) => v.id === id);
-      if (idx < 0) {
-        return { statusCode: 404, headers, body: JSON.stringify({ error: "Registro nao encontrado" }) };
+      return { statusCode: 200, headers, body: JSON.stringify(fila) };
+    }
+
+    if (method === "POST") {
+      let body;
+      try {
+        body = JSON.parse(event.body || "{}");
+      } catch (err) {
+        return fail(400, "Invalid JSON");
       }
-      fila.splice(idx, 1);
+
+      const { area, transporte, placa, entrada, chegada, tipo } = body;
+      if (!area || !transporte || !placa || !entrada || !chegada || !tipo) {
+        return fail(400, "Campos obrigatorios faltando");
+      }
+
+      const fila = await loadFila();
+      const newId = Date.now().toString() + "_" + Math.random().toString(16).slice(2);
+      const item = {
+        id: newId,
+        area,
+        transporte,
+        placa,
+        entrada,
+        chegada,
+        tipo,
+        createdAt: Date.now(),
+      };
+      fila.push(item);
       await saveFila(fila);
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, item }) };
+    }
+
+    if (method === "PUT") {
+      let body;
+      try {
+        body = JSON.parse(event.body || "{}");
+      } catch (err) {
+        return fail(400, "Invalid JSON");
+      }
+
+      const fila = await loadFila();
+
+      if (id) {
+        const idx = fila.findIndex((v) => v.id === id);
+        if (idx < 0) {
+          return fail(404, "Registro nao encontrado");
+        }
+        const current = fila[idx];
+        fila[idx] = { ...current, ...body, id: current.id };
+        await saveFila(fila);
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, item: fila[idx] }) };
+      }
+
+      if (!Array.isArray(body)) {
+        return fail(400, "Array esperado");
+      }
+
+      await saveFila(body);
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
     }
 
-    await saveFila([]);
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
-  }
+    if (method === "DELETE") {
+      if (id) {
+        const fila = await loadFila();
+        const idx = fila.findIndex((v) => v.id === id);
+        if (idx < 0) {
+          return fail(404, "Registro nao encontrado");
+        }
+        fila.splice(idx, 1);
+        await saveFila(fila);
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+      }
 
-  return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
+      await saveFila([]);
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+    }
+
+    return fail(405, "Method not allowed");
+  } catch (err) {
+    if (err && err.code === "STORAGE_NOT_CONFIGURED") {
+      return fail(500, "Armazenamento nao configurado. Ative o Netlify Blobs ou defina as variaveis de ambiente.");
+    }
+    console.error(err);
+    return fail(500, "Erro interno");
+  }
 };
